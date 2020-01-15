@@ -1,0 +1,231 @@
+package application;
+
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import javafx.application.Application;
+import static javafx.application.ConditionalFeature.FXML;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.geometry.Insets;
+import javafx.stage.Stage;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.control.Alert.*;
+
+/*
+ * Project Milestone 3 
+ * 
+ * CMSC 255 Section 004
+ * 
+ * Colden Grietzer
+ * Jeffrey Tucker
+ * Thomas Gordon
+ * Jackie Chavez
+ * 
+ * Our project focuses on the presentation of a question that asks the user the full name of a president based on the presidential order number. 
+ * The user continues to answer question to their desire and once they press "Done", they get their score.
+ *  
+ */
+
+public class PresidentsQuiz extends Application {
+	// Initializing tracking variable for number of questions a user participates 
+	int tracking = 0;
+	
+	@Override
+   public void start(Stage applicationStage) {
+    
+		/*****************************************************
+       * Creation of variables for labels or text fields
+       * and essential graphical variables for manipulation
+       *****************************************************/
+
+      Scene scene = null;       
+      GridPane gridPane = null;   
+      TextField questionOutputField = new TextField(); 
+      TextField answerInputField = new TextField();
+      Label questionOutputLabel = new Label("Question: ");
+      Label answerInputLabel = new Label("Answer: ");
+      Insets gridPadding = null;
+      Test test = new Test();
+     
+      
+      // Creation of buttons that will be used to navigate through the quiz 
+      
+      Button quitButton = new Button("Done"); // Allows the user to quit the program and displays the score
+      quitButton.setOnAction(new EventHandler() { 
+          @Override
+          public void handle(Event t) {
+        	  Alert score = new Alert(AlertType.INFORMATION, "The test is complete. Your score is " + test.getScore());
+        	  score.showAndWait();
+        	  System.exit(0);
+          }
+        });
+      
+ 
+      Button submitButton = new Button("Enter"); // Allows the user to get a new question after submitting their question and displays the answer
+      submitButton.setOnAction(new EventHandler() {
+          @Override
+          public void handle(Event t) {
+        	 
+              String userResponse = answerInputField.getText(); 
+             
+              if(test.getAnswer().equalsIgnoreCase(userResponse)) { // calling test method get answer and see if input equals 
+                  test.incrementScore();
+                  Alert correct = new Alert(AlertType.INFORMATION, "Correct!");
+                  correct.showAndWait();
+                  }
+             else {
+               Alert incorrect = new Alert(AlertType.INFORMATION,"Wrong! The correct answer is " + test.getAnswer());
+               incorrect.showAndWait();
+              }
+              
+              if(test.remainingQuestions() > 0) {
+              test.nextQuestion();
+              questionOutputField.setPrefColumnCount((test.getQuestion().length()));
+              questionOutputField.setText(test.getQuestion());
+              answerInputField.setText("");
+              tracking = tracking + 1;
+              }
+          }
+        });
+      
+      gridPane = new GridPane();   
+      scene = new Scene(gridPane); 
+      
+      //Setting of location of the user input field
+      answerInputField.setPrefColumnCount(15);
+      answerInputField.setEditable(true);
+      answerInputField.setText("");
+      
+      //Location of the question field for each iteration of question
+      questionOutputField.setPrefColumnCount((test.getQuestion().length()));
+      questionOutputField.setEditable(false);
+      questionOutputField.setText(test.getQuestion());
+
+      //Declares the location of the fields and buttons seen at execution of the program
+      gridPane.add(questionOutputLabel, 0, 0);
+      gridPane.add(questionOutputField, 1, 0); 
+      gridPane.add(answerInputLabel, 0, 1); 
+      gridPane.add(answerInputField, 1, 1);
+      gridPane.add(quitButton, 0, 5);
+      gridPane.add(submitButton, 2, 5);
+      
+      //Sets the parameters of the window that gui displays into
+      gridPadding = new Insets(10, 10, 10, 10); 
+      gridPane.setPadding(gridPadding);       
+      gridPane.setHgap(10);                  
+      gridPane.setVgap(20);                    
+      applicationStage.setScene(scene);  
+      applicationStage.setTitle("President's Quiz"); 
+      applicationStage.show();     
+   }
+
+	
+	// Creating a class called Test to create Test objects in order to generate questions and answers for the GUI
+	
+   public class Test{
+        private Random rand = new Random (); 
+        private List<String>  questions = new ArrayList<>(Arrays.asList(
+                "What is the name of the first president?", 
+                "What is the name of the second president?", 
+                "What is the name of the third president?", 
+                "What is the name of the fourth president?", 
+                "What is the name of the fifth president?",
+                "What is the name of the sixth president?",
+                "What is the name of the seventh president?", 
+                "What is the name of the eighth president?",
+                "What is the name of the ninth president?",
+                "What is the name of the tenth president?" ));
+        private List<String> answers = new ArrayList<>(Arrays.asList(
+                "George Washington", 
+                "John Adams", 
+                "Thomas Jefferson", 
+                "James Madison", 
+                "James Monroe",
+                "John Quincy Adams",
+                "Andrew Jackson",
+                "Martin Van Buren",
+                "William Henry Harrison",
+                "John Tyler"));
+        
+
+        private List<Solution> test = new ArrayList<>(); //Making a list of Solution objects to add to the test arrayList
+        private int index;
+        private Solution solution;
+        private int score = 0;
+        private int numOfQuestions;
+        
+        public Test() { //default constructor for the Test class 
+            for (int x = 0; x < 10; x++) { // look at looking at the length
+            	Solution solution = new Solution(questions.get(x), answers.get(x));
+                test.add(solution); // make a solutions class that would have answers and questions and have getter and setter method 
+            }
+            this.numOfQuestions = this.test.size();
+            this.nextQuestion();
+        }
+        
+        public String getQuestion(){ 
+            return this.solution.getQuestion(); // asks for the question component of the solution at a certain index test arrayList
+        }
+        public String getAnswer(){
+            return this.solution.getAnswer(); // asks for the answer component of the solution at a certain index test arrayList
+        }
+        public void nextQuestion(){
+            this.index = rand.nextInt(this.test.size()); // generates a random number based on the test arrayList
+            this.solution = this.test.get(index);  // generates solution object at this index
+        }
+        public int remainingQuestions() { // generates questions as the test arrayList is not empty
+            return this.test.size();
+        }
+        public void incrementScore() { // increments score if the user gets the question correct
+                this.score++;
+        }
+        public float getScore() { //  generates the scored based on score correct over number of questions the user did
+            return ((float)this.score/tracking) * 100;
+        }
+      
+        
+        //Creating of "Solution" class that creates an object that has a question and an answer component from the arrayLists 
+        
+        public class Solution{
+        
+        	private String Question = " ";
+        	private String Answer = " ";
+        	
+        	//Default Constructor
+        	public Solution (String Question, String Answer){ 
+        		this.Question = Question;
+        		this.Answer = Answer;
+        	}
+        	
+        	public void setQuestion(String Question) {
+        		this.Question = Question;
+        	}
+        	
+        	public String getQuestion() {
+        		return this.Question;
+        	}
+        	
+        	public void setAnswer(String Answer) {
+        		this.Answer = Answer;
+        	}
+        	
+        	public String getAnswer() {
+        		return this.Answer;
+        	}
+        }
+   }
+
+   public static void main(String [] args) {
+      launch(args); // Launch application
+   }
+}
+
